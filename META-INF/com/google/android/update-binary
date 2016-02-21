@@ -1,0 +1,59 @@
+#!/sbin/sh
+FD=$2
+print(){
+	[ "$FD" == "none" ] && echo "$1" && return
+	echo -e -n "ui_print $1\n" > /proc/self/fd/$FD
+}
+export WORKDIR=/tmp/needle
+mkdir -p "$WORKDIR"/out/smali
+mkdir -p "$WORKDIR"/build
+mkdir -p "$WORKDIR"/unzip
+cd "$WORKDIR"
+print "*** Extracting files..."
+unzip -o "$3"
+tar xf needle.tar
+
+export BOOTCLASSPATH=/system/framework/core-libart.jar:/system/framework/conscrypt.jar:/system/framework/okhttp.jar:/system/framework/core-junit.jar:/system/framework/bouncycastle.jar:/system/framework/ext.jar:/system/framework/framework.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/ims-common.jar:/system/framework/apache-xml.jar:/system/framework/org.apache.http.legacy.boot.jar:/system/framework/qcmediaplayer.jar
+mount /system
+
+if [ -f /system/framework/framework.jar ]; then
+	print "*** Extracting framework.jar..."
+	unzip -o /system/framework/framework.jar -d "$WORKDIR"/unzip/
+else
+	print "!!! framework.jar not found, exiting..."
+	exit 1
+fi
+
+print "*** Disassembling framework.jar..."
+LD_LIBRARY_PATH=/system/lib /system/bin/dalvikvm -cp "$WORKDIR"/jars/baksmali-dvk.jar org.jf.baksmali.main -o "$WORKDIR"/out/smali "$WORKDIR"/unzip/classes.dex &>"$WORKDIR"/log
+[ "$?" != "0" ] && \
+	print "!!! Something weird happened, exiting..." && \
+	exit 1
+if [ "$FD" == "none" ]; then
+	LD_LIBRARY_PATH=$WORKDIR/bin/lib $WORKDIR/bin/python3 "$WORKDIR"/patch.py
+else
+	LD_LIBRARY_PATH=$WORKDIR/bin/lib $WORKDIR/bin/python3 "$WORKDIR"/patch.py &> /proc/self/fd/$FD
+fi
+[ "$?" != "0" ] && \
+	print "!!! Something happened, exiting..." && \
+	exit 1
+
+print "*** Reassembling framework.jar..."
+LD_LIBRARY_PATH=/system/lib /system/bin/dalvikvm -Xmx512m -cp "$WORKDIR"/jars/smali-dvk.jar org.jf.smali.main -o "$WORKDIR"/build/classes.dex "$WORKDIR"/out/smali &> $WORKDIR/log
+[ "$?" != "0" ] && \
+	print "!!! Reassembling failed, do you have more than 512 MB of RAM on this device?" && \
+	exit 1
+
+print "*** Mounting /system read-write..."
+mount -o rw,remount /system
+
+print "*** Putting things back like nothing ever happened..."
+cd "$WORKDIR"/build
+
+LD_LIBRARY_PATH=/system/lib /system/xbin/zip /system/framework/framework.jar classes.dex &> $WORKDIR/log
+
+[ "$?" != "0" ] && \
+	print "!!! Something weird happened, exiting..." && \
+	exit 1
+
+print "*** All done :)"
