@@ -65,11 +65,5 @@ contents = "".join(contents)
 f.write(contents)
 f.close()
 
-# reassemble it
 print("ui_print *** Injection successful.")
 sys.exit(0)
-
-# put classes.smali into framework.jar
-#print(" *** Putting things back like nothing ever happened...")
-#os.chdir("framework.jar.out/build/apk")
-#subprocess.call(["zip", "-r", "../../../framework.jar", "classes.dex"])
