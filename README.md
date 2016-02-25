@@ -1,4 +1,5 @@
 # Framework Patcher for Android
+This patches the framework.jar for applications to fake their signature (Useful for microG GMSCore)
 
 ## Based on:
 https://github.com/moosd/Needle

@@ -2,7 +2,7 @@
 import os, subprocess, tempfile, time, shutil, sys
 
 # do the injection
-print("ui_print *** Done. Now this won't hurt a bit...")
+print("*** Done. Now this won't hurt a bit...")
 to_patch = "out/smali/android/content/pm/PackageParser.smali"
 
 f = open(to_patch, "r")
@@ -55,9 +55,9 @@ while i < len(old_contents):
 if not already_patched and not partially_patched:
     contents.extend(fillinsig)
 elif partially_patched and not already_patched:
-    print("ui_print ??? Previous failed patch attempt, not including the fillinsig method again...")
+    print("??? Previous failed patch attempt, not including the fillinsig method again...")
 elif already_patched:
-    print("ui_print ??? This framework.jar appears to already have been patched... Exiting.")
+    print("??? This framework.jar appears to already have been patched... Exiting.")
     sys.exit(2)
 
 f = open(to_patch, "w")
@@ -65,5 +65,5 @@ contents = "".join(contents)
 f.write(contents)
 f.close()
 
-print("ui_print *** Injection successful.")
+print("*** Injection successful.")
 sys.exit(0)
