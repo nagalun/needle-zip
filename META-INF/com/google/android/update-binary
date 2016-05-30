@@ -26,7 +26,7 @@ else
 fi
 
 print "*** Disassembling framework.jar..."
-LD_LIBRARY_PATH=/system/lib /system/bin/dalvikvm -cp "$WORKDIR/jars/baksmali-dvk.jar" org.jf.baksmali.main -o "$WORKDIR/out/smali" "$WORKDIR/unzip/classes.dex" 2>&1 | sed 's/^/ui_print <dalvikvm> /' > /proc/self/fd/$FD
+LD_LIBRARY_PATH=/system/lib64:/system/lib /system/bin/dalvikvm -cp "$WORKDIR/jars/baksmali-dvk.jar" org.jf.baksmali.main -o "$WORKDIR/out/smali" "$WORKDIR/unzip/classes.dex" 2>&1 | sed 's/^/ui_print <dalvikvm> /' > /proc/self/fd/$FD
 [ "$?" != "0" ] && \
 	print "!!! Something weird happened, exiting..." && \
 	exit 1
@@ -40,7 +40,7 @@ fi
 	exit 1
 
 print "*** Reassembling framework.jar..."
-LD_LIBRARY_PATH=/system/lib /system/bin/dalvikvm -Xmx512m -cp "$WORKDIR/jars/smali-dvk.jar" org.jf.smali.main -o "$WORKDIR/build/classes.dex" "$WORKDIR/out/smali" 2>&1 | sed 's/^/ui_print <dalvikvm> /' > /proc/self/fd/$FD
+LD_LIBRARY_PATH=/system/lib64:/system/lib /system/bin/dalvikvm -Xmx512m -cp "$WORKDIR/jars/smali-dvk.jar" org.jf.smali.main -o "$WORKDIR/build/classes.dex" "$WORKDIR/out/smali" 2>&1 | sed 's/^/ui_print <dalvikvm> /' > /proc/self/fd/$FD
 [ "$?" != "0" ] && \
 	print "!!! Reassembling failed, do you have more than 512 MB of RAM on this device?" && \
 	exit 1
@@ -51,7 +51,7 @@ mount -o rw,remount /system
 print "*** Putting things back like nothing ever happened..."
 cd "$WORKDIR/build"
 
-LD_LIBRARY_PATH=/system/lib /system/xbin/zip /system/framework/framework.jar classes.dex &> "$WORKDIR/log"
+LD_LIBRARY_PATH=/system/lib64:/system/lib /system/xbin/zip /system/framework/framework.jar classes.dex &> "$WORKDIR/log"
 
 [ "$?" != "0" ] && \
 	sed 's/^/ui_print <zip> /' "$WORKDIR/log" > /proc/self/fd/$FD
